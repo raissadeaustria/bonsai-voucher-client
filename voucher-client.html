@@ -417,6 +417,20 @@
 </head>
 <body>
 
+<!-- Login Screen -->
+<div id="loginScreen" style="display:flex; align-items:center; justify-content:center; min-height:100vh; min-height:100dvh; background:#F6F4EE; padding:24px;">
+  <div style="background:#fff; border-radius:16px; padding:40px 32px; box-shadow:0 4px 24px rgba(0,0,0,.1); text-align:center; max-width:340px; width:100%;">
+    <img src="logo-transparent.svg" alt="Bonsai" style="width:64px; height:64px; margin-bottom:12px;">
+    <h2 style="font-family:'Tenor Sans',serif; color:#1C3B31; font-size:1.2rem; margin-bottom:4px;">Bonsai Thai Massage</h2>
+    <p style="font-size:.8rem; color:#888; margin-bottom:24px;">Dárkový Poukaz</p>
+    <input type="password" id="loginPassword" placeholder="Zadejte heslo" style="width:100%; padding:14px 16px; border:1.5px solid #ddd; border-radius:10px; font-family:'Tenor Sans',serif; font-size:15px; text-align:center; margin-bottom:16px; outline:none;" onfocus="this.style.borderColor='#1C3B31'" onblur="this.style.borderColor='#ddd'">
+    <button id="loginBtn" style="width:100%; padding:14px; background:#1C3B31; color:#fff; border:none; border-radius:10px; font-family:'Tenor Sans',serif; font-size:15px; font-weight:600; cursor:pointer;">Přihlásit se</button>
+    <p id="loginError" style="color:#c0392b; font-size:.8rem; margin-top:10px; display:none;">Nesprávné heslo</p>
+  </div>
+</div>
+
+<div id="mainApp" style="display:none;">
+
 <!-- ── FORM ── -->
 <div class="form-panel" id="formPanel">
   <h1>Dárkový Poukaz</h1>
@@ -958,6 +972,52 @@
     updatePreview();
     setTimeout(scaleVoucher, 100);
   });
+</script>
+
+</div><!-- /mainApp -->
+
+<script>
+// ── Password Protection ──
+function checkAuth() {
+  if (localStorage.getItem('bonsai_voucher_client_auth') === 'true') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = '';
+    return true;
+  }
+  return false;
+}
+checkAuth();
+
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const pwd = document.getElementById('loginPassword').value;
+  document.getElementById('loginBtn').disabled = true;
+  document.getElementById('loginBtn').textContent = 'Přihlašování...';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('bonsai_voucher_client_auth', 'true');
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display = '';
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginPassword').style.borderColor = '#c0392b';
+    }
+  } catch (e) {
+    document.getElementById('loginError').textContent = 'Přihlášení selhalo, zkuste znovu';
+    document.getElementById('loginError').style.display = 'block';
+  }
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtn').textContent = 'Přihlásit se';
+}
 </script>
 
 </body>
