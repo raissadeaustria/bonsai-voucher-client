@@ -911,24 +911,41 @@
       String(pragueDate.getMonth() + 1).padStart(2, '0') + '-' +
       String(pragueDate.getDate()).padStart(2, '0');
 
-    fetch(GOOGLE_SHEET_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        voucherCode: currentVoucherCode,
-        service: service,
-        price: price,
-        clientName: document.getElementById('clientName').value.trim(),
-        clientEmail: document.getElementById('clientEmail').value.trim(),
-        clientPhone: document.getElementById('clientPhone').value.trim(),
-        message: document.getElementById('message').value.trim(),
-        dateCreated: dateCreated,
-        expiryDate: currentExpiry
-      })
-    }).catch(function(err) {
-      console.error('Sheet logging failed:', err);
+    var data = {
+      voucherCode: currentVoucherCode,
+      service: service,
+      price: price,
+      clientName: document.getElementById('clientName').value.trim(),
+      clientEmail: document.getElementById('clientEmail').value.trim(),
+      clientPhone: document.getElementById('clientPhone').value.trim(),
+      message: document.getElementById('message').value.trim(),
+      dateCreated: dateCreated,
+      expiryDate: currentExpiry
+    };
+
+    // Use hidden form + iframe to avoid CORS issues with Apps Script
+    var iframe = document.createElement('iframe');
+    iframe.name = 'sheet-log-frame';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = GOOGLE_SHEET_URL;
+    form.target = 'sheet-log-frame';
+
+    Object.keys(data).forEach(function(key) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = data[key];
+      form.appendChild(input);
     });
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+    setTimeout(function() { document.body.removeChild(iframe); }, 5000);
   }
 
 

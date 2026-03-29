@@ -14,7 +14,6 @@
 function doPost(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    var data = JSON.parse(e.postData.contents);
 
     // Add headers if sheet is empty
     if (sheet.getLastRow() === 0) {
@@ -31,38 +30,39 @@ function doPost(e) {
         'Expiry Date',
         'Payment Status'
       ]);
-      // Bold headers
       sheet.getRange(1, 1, 1, 11).setFontWeight('bold');
     }
 
+    // Read from form parameters
+    var p = e.parameter;
+
     sheet.appendRow([
-      data.voucherCode || '',
+      p.voucherCode || '',
       'Created',
-      data.service || '',
-      data.price || '',
-      data.clientName || '',
-      data.clientEmail || '',
-      data.clientPhone || '',
-      data.message || '',
-      data.dateCreated || '',
-      data.expiryDate || '',
+      p.service || '',
+      p.price || '',
+      p.clientName || '',
+      p.clientEmail || '',
+      p.clientPhone || '',
+      p.message || '',
+      p.dateCreated || '',
+      p.expiryDate || '',
       'Paid (Client App)'
     ]);
 
     return ContentService
-      .createTextOutput(JSON.stringify({ status: 'ok' }))
-      .setMimeType(ContentService.MimeType.JSON);
+      .createTextOutput('OK')
+      .setMimeType(ContentService.MimeType.TEXT);
 
   } catch (err) {
     return ContentService
-      .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+      .createTextOutput('Error: ' + err.toString())
+      .setMimeType(ContentService.MimeType.TEXT);
   }
 }
 
-// Allow GET requests for testing
 function doGet(e) {
   return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok', message: 'Voucher tracker is running' }))
-    .setMimeType(ContentService.MimeType.JSON);
+    .createTextOutput('Voucher tracker is running')
+    .setMimeType(ContentService.MimeType.TEXT);
 }
