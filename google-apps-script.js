@@ -8,7 +8,7 @@
 // 4. Click Deploy > New deployment
 // 5. Select "Web app", set "Who has access" to "Anyone"
 // 6. Click Deploy, copy the URL
-// 7. Paste the URL into voucher-client.html (GOOGLE_SHEET_URL variable)
+// 7. Add the URL as GOOGLE_SHEET_URL environment variable in Vercel
 // =============================================================
 
 function doPost(e) {
@@ -33,36 +33,41 @@ function doPost(e) {
       sheet.getRange(1, 1, 1, 11).setFontWeight('bold');
     }
 
-    // Read from form parameters
-    var p = e.parameter;
+    // Try JSON body first, fall back to form parameters
+    var data;
+    try {
+      data = JSON.parse(e.postData.contents);
+    } catch (jsonErr) {
+      data = e.parameter || {};
+    }
 
     sheet.appendRow([
-      p.voucherCode || '',
+      data.voucherCode || '',
       'Created',
-      p.service || '',
-      p.price || '',
-      p.clientName || '',
-      p.clientEmail || '',
-      p.clientPhone || '',
-      p.message || '',
-      p.dateCreated || '',
-      p.expiryDate || '',
+      data.service || '',
+      data.price || '',
+      data.clientName || '',
+      data.clientEmail || '',
+      data.clientPhone || '',
+      data.message || '',
+      data.dateCreated || '',
+      data.expiryDate || '',
       'Paid (Client App)'
     ]);
 
     return ContentService
-      .createTextOutput('OK')
-      .setMimeType(ContentService.MimeType.TEXT);
+      .createTextOutput(JSON.stringify({ status: 'ok' }))
+      .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
     return ContentService
-      .createTextOutput('Error: ' + err.toString())
-      .setMimeType(ContentService.MimeType.TEXT);
+      .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 function doGet(e) {
   return ContentService
-    .createTextOutput('Voucher tracker is running')
-    .setMimeType(ContentService.MimeType.TEXT);
+    .createTextOutput(JSON.stringify({ status: 'ok', message: 'Voucher tracker is running' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }

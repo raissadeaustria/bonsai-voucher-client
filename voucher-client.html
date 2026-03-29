@@ -642,8 +642,7 @@
   // ── TEST MODE — Replace with live Stripe key before production ──
   const stripe = Stripe('pk_test_PLACEHOLDER');
 
-  // ── Google Sheet tracking — Replace with your deployed Apps Script URL ──
-  const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyoUdQBis8ecqUA01a4NMUkxeCtC8ciRwnBVH5Ngp5jUMVBFiPmZPfi42RjKzZpkG_R/exec';
+  // ── Google Sheet tracking is handled via /api/log-voucher ──
 
   // Pre-defined voucher codes (separate index from internal generator)
   const VOUCHER_CODES = [
@@ -901,8 +900,6 @@
   }
 
   function logVoucherToSheet() {
-    if (!GOOGLE_SHEET_URL) return;
-
     var service = document.getElementById('service').value;
     var price = getSelectedPrice();
     var now = new Date();
@@ -911,41 +908,23 @@
       String(pragueDate.getMonth() + 1).padStart(2, '0') + '-' +
       String(pragueDate.getDate()).padStart(2, '0');
 
-    var data = {
-      voucherCode: currentVoucherCode,
-      service: service,
-      price: price,
-      clientName: document.getElementById('clientName').value.trim(),
-      clientEmail: document.getElementById('clientEmail').value.trim(),
-      clientPhone: document.getElementById('clientPhone').value.trim(),
-      message: document.getElementById('message').value.trim(),
-      dateCreated: dateCreated,
-      expiryDate: currentExpiry
-    };
-
-    // Use hidden form + iframe to avoid CORS issues with Apps Script
-    var iframe = document.createElement('iframe');
-    iframe.name = 'sheet-log-frame';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = GOOGLE_SHEET_URL;
-    form.target = 'sheet-log-frame';
-
-    Object.keys(data).forEach(function(key) {
-      var input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = data[key];
-      form.appendChild(input);
+    fetch('/api/log-voucher', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        voucherCode: currentVoucherCode,
+        service: service,
+        price: price,
+        clientName: document.getElementById('clientName').value.trim(),
+        clientEmail: document.getElementById('clientEmail').value.trim(),
+        clientPhone: document.getElementById('clientPhone').value.trim(),
+        message: document.getElementById('message').value.trim(),
+        dateCreated: dateCreated,
+        expiryDate: currentExpiry
+      })
+    }).catch(function(err) {
+      console.error('Sheet logging failed:', err);
     });
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-    setTimeout(function() { document.body.removeChild(iframe); }, 5000);
   }
 
 
