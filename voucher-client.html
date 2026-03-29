@@ -642,6 +642,9 @@
   // ── TEST MODE — Replace with live Stripe key before production ──
   const stripe = Stripe('pk_test_PLACEHOLDER');
 
+  // ── Google Sheet tracking — Replace with your deployed Apps Script URL ──
+  const GOOGLE_SHEET_URL = '';
+
   // Pre-defined voucher codes (separate index from internal generator)
   const VOUCHER_CODES = [
     'C26-030A7K','C26-030B3Q','C26-030C9M','C26-030D5X','C26-030E1F',
@@ -892,6 +895,40 @@
     document.getElementById('formPanel').style.display = 'none';
     document.getElementById('successSection').style.display = 'block';
     scaleVoucher();
+
+    // Log voucher to Google Sheet
+    logVoucherToSheet();
+  }
+
+  function logVoucherToSheet() {
+    if (!GOOGLE_SHEET_URL) return;
+
+    var service = document.getElementById('service').value;
+    var price = getSelectedPrice();
+    var now = new Date();
+    var pragueDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+    var dateCreated = pragueDate.getFullYear() + '-' +
+      String(pragueDate.getMonth() + 1).padStart(2, '0') + '-' +
+      String(pragueDate.getDate()).padStart(2, '0');
+
+    fetch(GOOGLE_SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        voucherCode: currentVoucherCode,
+        service: service,
+        price: price,
+        clientName: document.getElementById('clientName').value.trim(),
+        clientEmail: document.getElementById('clientEmail').value.trim(),
+        clientPhone: document.getElementById('clientPhone').value.trim(),
+        message: document.getElementById('message').value.trim(),
+        dateCreated: dateCreated,
+        expiryDate: currentExpiry
+      })
+    }).catch(function(err) {
+      console.error('Sheet logging failed:', err);
+    });
   }
 
 
