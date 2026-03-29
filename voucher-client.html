@@ -1,10 +1,8 @@
 <!--
   ============================================================
-  TEST VERSION — Bonsai Thai Massage — Client Voucher Purchase
+  Bonsai Thai Massage — Client Voucher Purchase
   ============================================================
-  The Stripe key below (pk_test_PLACEHOLDER) is a placeholder.
-  Replace it with your live Stripe publishable key before
-  deploying to production.
+  Stripe test mode — replace keys with live keys for production
   ============================================================
 -->
 <!DOCTYPE html>
@@ -639,8 +637,8 @@
 </div>
 
 <script>
-  // ── TEST MODE — Replace with live Stripe key before production ──
-  const stripe = Stripe('pk_test_PLACEHOLDER');
+  // ── Stripe (test mode) ──
+  const stripe = Stripe('pk_test_51TGJzFCMAWQVH9wkmlaYJSt4BJARDlIqKHyv9tg2JFga4ju4aJ9NedRhbOpkct80Pdj2ewgItGeRJDVC6I2zTRXa00yJXugLGr');
 
   // ── Google Sheet tracking is handled via /api/log-voucher ──
 
@@ -859,29 +857,47 @@
     currentVoucherCode = getNextCode();
     currentExpiry = getExpiryDate();
 
-    /*
-      In production, you would call your backend to create a Stripe Checkout Session:
+    // Save voucher data before redirecting to Stripe
+    localStorage.setItem('bonsai_pending_voucher', JSON.stringify({
+      voucherCode: currentVoucherCode,
+      expiryDate: currentExpiry,
+      service: service,
+      price: price,
+      message: document.getElementById('message').value.trim()
+    }));
 
-      fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          price: price,
-          service: service,
-          voucherCode: currentVoucherCode,
-          clientName: document.getElementById('clientName').value,
-          clientEmail: document.getElementById('clientEmail').value,
-          clientPhone: document.getElementById('clientPhone').value
-        })
+    // Create Stripe Checkout Session and redirect
+    fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        price: price,
+        service: service,
+        voucherCode: currentVoucherCode,
+        expiryDate: currentExpiry,
+        clientName: document.getElementById('clientName').value.trim(),
+        clientEmail: document.getElementById('clientEmail').value.trim(),
+        clientPhone: document.getElementById('clientPhone').value.trim(),
+        message: document.getElementById('message').value.trim()
       })
-      .then(res => res.json())
-      .then(session => stripe.redirectToCheckout({ sessionId: session.id }));
-
-      For now (TEST MODE), we simulate a successful payment:
-    */
-    setTimeout(function() {
-      showSuccess();
-    }, 1500);
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.error) {
+        alert('Chyba: ' + data.error);
+        btn.disabled = false;
+        btn.textContent = 'Zaplatit ' + formatPrice(price);
+        return;
+      }
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    })
+    .catch(function(err) {
+      console.error('Payment error:', err);
+      alert('Nepodařilo se vytvořit platbu. Zkuste to prosím znovu.');
+      btn.disabled = false;
+      btn.textContent = 'Zaplatit ' + formatPrice(price);
+    });
   }
 
   function showSuccess() {
@@ -1005,6 +1021,65 @@
   }
   window.addEventListener('resize', scaleVoucher);
 
+  // Check if returning from Stripe payment
+  function checkPaymentReturn() {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('success') === 'true' && params.get('session_id')) {
+      // Verify payment with server
+      fetch('/api/verify-payment?session_id=' + params.get('session_id'))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.paid) {
+            currentVoucherCode = data.voucherCode;
+            currentExpiry = data.expiryDate;
+
+            // Update voucher preview with payment data
+            document.getElementById('v-service').textContent = data.service;
+            document.getElementById('v-message').textContent = data.message || '';
+            document.getElementById('priceDisplay').textContent = formatPrice(parseInt(data.price));
+
+            showSuccess();
+
+            // Log to Google Sheet
+            document.getElementById('clientName').value = data.clientName || '';
+            document.getElementById('clientEmail').value = data.clientEmail || '';
+            document.getElementById('clientPhone').value = data.clientPhone || '';
+            document.getElementById('message').value = data.message || '';
+
+            // Find and select the matching service
+            var sel = document.getElementById('service');
+            for (var i = 0; i < sel.options.length; i++) {
+              if (sel.options[i].value === data.service && sel.options[i].dataset.price === data.price) {
+                sel.selectedIndex = i;
+                break;
+              }
+            }
+
+            logVoucherToSheet();
+
+            // Clean up localStorage
+            localStorage.removeItem('bonsai_pending_voucher');
+          }
+        })
+        .catch(function(err) {
+          console.error('Payment verification failed:', err);
+        });
+
+      // Clean URL
+      window.history.replaceState({}, '', '/');
+      return true;
+    }
+
+    if (params.get('canceled') === 'true') {
+      // Payment was canceled, clean up
+      localStorage.removeItem('bonsai_pending_voucher');
+      window.history.replaceState({}, '', '/');
+    }
+
+    return false;
+  }
+
   // Init
   window.addEventListener('DOMContentLoaded', function() {
     // Show preview with placeholder code and expiry
@@ -1012,6 +1087,9 @@
     document.getElementById('v-expiry').textContent = formatDate(getExpiryDate());
     updatePreview();
     setTimeout(scaleVoucher, 100);
+
+    // Check if returning from Stripe
+    checkPaymentReturn();
   });
 </script>
 
