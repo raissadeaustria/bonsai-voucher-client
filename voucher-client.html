@@ -344,7 +344,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 7px 30px;
     text-align: left;
-    font-size: 12.5px;
+    font-size: 13px;
     color: #2E2E2E;
     max-width: 600px;
     position: absolute;
@@ -353,12 +353,19 @@
     right: 0;
     margin: 0 auto;
     padding-left: 80px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   .info-item {
     display: flex;
     align-items: center;
     gap: 8px;
     white-space: nowrap;
+  }
+  .info-item span {
+    font-size: 13px;
+    letter-spacing: 0.2px;
   }
   .info-icon {
     width: 16px;
@@ -637,39 +644,38 @@
 
   // Pre-defined voucher codes (separate index from internal generator)
   const VOUCHER_CODES = [
-    '25-027GTS','25-027HE3','25-027HYE','25-027IIP','25-027J30',
-    '25-027JNB','25-027K7M','25-027KRX','25-027LC8','25-027LWJ',
-    '25-027MGU','25-027N15','25-027NLG','25-027O5R','25-027OQ2',
-    '25-027PAD','25-027PUO','25-027QEZ','25-027QZA','25-027RJL',
-    '25-027S3W','25-027SO7','25-027T8I','25-027TST','25-027UD4',
-    '25-027UXF','25-027VHQ','25-027W21','25-027WMC',
-    '26-026A3F','26-026B7Q','26-026C2M','26-026D8X','26-026E9K',
-    '26-026F4A','26-026GZ5','26-026H6N','26-026I1R','26-026JQ8',
-    '26-026K0V','26-026L7E','26-026M3S','26-026NXT','26-026O5B',
-    '26-026P2H','26-026Q9C','26-026R4D','26-026S6Y','26-026TKA',
-    '26-026U8M','26-026V1F','26-026W7P','26-026XQ2','26-026Y9H',
-    '26-026Z5S',
-    '26-0270AF','26-0271KQ','26-0272M8','26-0273SX','26-0274Y1',
-    '26-0275DP','26-0276H4','26-0277VZ','26-0278C9','26-0279W6',
-    '26-027A3E','26-027B7M','26-027C1R','26-027D9K','26-027E6Q',
-    '26-027F8A','26-027G2X','26-027H5D','26-027IY9','26-027J4S',
-    '26-027KZ1','26-027L7H','26-027M3P','26-027N8C','26-027O6F',
-    '26-027P1A','26-027Q9M','26-027R2X','26-027S5K','26-027T8D',
-    '26-027U3H','26-027V7Q','26-027W1S','26-027X9A','26-027Y6M',
-    '26-027Z2P',
-    '26-0280Q4','26-0281H8','26-0282S6','26-0283D9','26-0284X1',
-    '26-0285MZ','26-0286A5','26-0287K3','26-0288P7','26-0289C2',
-    '26-028A8Q','26-028B4H','26-028C9M','26-028D1X','26-028E7S',
-    '26-028F5K','26-028G3A','26-028H9P','26-028I6D','26-028J2M',
-    '26-028KX8','26-028L4Q','26-028M7H','26-028N1S','26-028O9A',
-    '26-028P5M','26-028Q3X','26-028R8D','26-028S6Q'
+    'C26-030A7K','C26-030B3Q','C26-030C9M','C26-030D5X','C26-030E1F',
+    'C26-030F8H','C26-030G4R','C26-030H6P','C26-030J2W','C26-030K9A',
+    'C26-030L5D','C26-030M3V','C26-030N7E','C26-030P1S','C26-030Q8T',
+    'C26-030R4Y','C26-030S6B','C26-030T2N','C26-030U9C','C26-030V5G',
+    'C26-030W3L','C26-030X7J','C26-030Y1Z','C26-030Z4H','C26-030A8R',
+    'C26-031B6M','C26-031C2K','C26-031D9F','C26-031E5Q','C26-031F3X',
+    'C26-031G7A','C26-031H1P','C26-031J4W','C26-031K8D','C26-031L2S',
+    'C26-031M6T','C26-031N3Y','C26-031P9B','C26-031Q5N','C26-031R1C',
+    'C26-031S7G','C26-031T4L','C26-031U8J','C26-031V2Z','C26-031W6H',
+    'C26-031X3R','C26-031Y9M','C26-031Z5K','C26-031A1F','C26-031B8Q',
+    'C26-032C4X','C26-032D7A','C26-032E3P','C26-032F9W','C26-032G5D',
+    'C26-032H1S','C26-032J6T','C26-032K2Y','C26-032L8B','C26-032M4N',
+    'C26-032N9C','C26-032P5G','C26-032Q1L','C26-032R7J','C26-032S3Z',
+    'C26-032T8H','C26-032U4R','C26-032V9M','C26-032W5K','C26-032X1F',
+    'C26-032Y6Q','C26-032Z2X','C26-032A7A','C26-032B3P','C26-032C9W',
+    'C26-033D5D','C26-033E1S','C26-033F6T','C26-033G2Y','C26-033H8B',
+    'C26-033J4N','C26-033K9C','C26-033L5G','C26-033M1L','C26-033N7J',
+    'C26-033P3Z','C26-033Q8H','C26-033R4R','C26-033S9M','C26-033T5K',
+    'C26-033U1F','C26-033V6Q','C26-033W2X','C26-033X7A','C26-033Y3P',
+    'C26-033Z9W','C26-033A5D','C26-033B1S','C26-033C6T','C26-033D2Y',
+    'C26-034E8B','C26-034F4N','C26-034G9C','C26-034H5G','C26-034J1L',
+    'C26-034K7J','C26-034L3Z','C26-034M8H','C26-034N4R','C26-034P9M',
+    'C26-034Q5K','C26-034R1F','C26-034S6Q','C26-034T2X','C26-034U7A',
+    'C26-034V3P','C26-034W9W','C26-034X5D','C26-034Y1S','C26-034Z6T',
+    'C26-034A2Y','C26-034B8B','C26-034C4N','C26-034D9C','C26-034E5G'
   ];
 
   let currentVoucherCode = '';
   let currentExpiry = '';
 
   function getNextCode() {
-    let index = parseInt(localStorage.getItem('bonsai_client_voucher_index') || '0');
+    let index = parseInt(localStorage.getItem('bonsai_client_paid_voucher_index') || '0');
     let code;
     if (index < VOUCHER_CODES.length) {
       code = VOUCHER_CODES[index];
@@ -681,9 +687,9 @@
       for (let i = 0; i < 2; i++) {
         suffix += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      code = year + '-' + seq + suffix;
+      code = 'C' + year + '-' + seq + suffix;
     }
-    localStorage.setItem('bonsai_client_voucher_index', (index + 1).toString());
+    localStorage.setItem('bonsai_client_paid_voucher_index', (index + 1).toString());
     return code;
   }
 
@@ -899,13 +905,15 @@
     voucher.style.transform = 'none';
 
     html2canvas(voucher, {
-      scale: 2,
+      scale: 4,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       width: 800,
       height: 566,
-      windowWidth: 800
+      windowWidth: 800,
+      imageTimeout: 0,
+      logging: false
     }).then(function(canvas) {
       voucher.style.transform = origTransform;
       var jsPDF = window.jspdf.jsPDF;
@@ -914,8 +922,8 @@
       var pdfH = pdfW * (566 / 800);
       var x = (297 - pdfW) / 2;
       var y = (210 - pdfH) / 2;
-      var imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', x, y, pdfW, pdfH);
+      var imgData = canvas.toDataURL('image/png', 1.0);
+      pdf.addImage(imgData, 'PNG', x, y, pdfW, pdfH, undefined, 'NONE');
       pdf.save('voucher-' + currentVoucherCode + '.pdf');
       btn.textContent = 'Stáhnout PDF';
       btn.disabled = false;
