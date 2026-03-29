@@ -8,7 +8,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Stripe not configured' });
   }
 
-  const { price, service, voucherCode, expiryDate, clientName, clientEmail, clientPhone, message } = req.body;
+  const { price, service, clientName, clientEmail, clientPhone, message } = req.body;
+
+  // Generate unique voucher code on the server (no duplicates across devices)
+  const voucherCode = generateVoucherCode();
+  const expiryDate = getExpiryDate();
 
   // Stripe uses smallest currency unit (haléře for CZK, 1 CZK = 100 haléřů)
   const amountInHalere = price * 100;
@@ -52,4 +56,23 @@ export default async function handler(req, res) {
     console.error('Stripe error:', err);
     return res.status(500).json({ error: err.message });
   }
+}
+
+function generateVoucherCode() {
+  const year = new Date().getFullYear().toString().slice(-2);
+  const chars = 'ABCDEFGHJKLMNPQRTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return 'C' + year + '-' + code;
+}
+
+function getExpiryDate() {
+  const now = new Date();
+  const pragueDate = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Prague' }));
+  const year = pragueDate.getFullYear() + 1;
+  const month = String(pragueDate.getMonth() + 1).padStart(2, '0');
+  const day = String(pragueDate.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
 }

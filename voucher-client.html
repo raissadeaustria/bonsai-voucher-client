@@ -642,56 +642,8 @@
 
   // ── Google Sheet tracking is handled via /api/log-voucher ──
 
-  // Pre-defined voucher codes (separate index from internal generator)
-  const VOUCHER_CODES = [
-    'C26-030A7K','C26-030B3Q','C26-030C9M','C26-030D5X','C26-030E1F',
-    'C26-030F8H','C26-030G4R','C26-030H6P','C26-030J2W','C26-030K9A',
-    'C26-030L5D','C26-030M3V','C26-030N7E','C26-030P1S','C26-030Q8T',
-    'C26-030R4Y','C26-030S6B','C26-030T2N','C26-030U9C','C26-030V5G',
-    'C26-030W3L','C26-030X7J','C26-030Y1Z','C26-030Z4H','C26-030A8R',
-    'C26-031B6M','C26-031C2K','C26-031D9F','C26-031E5Q','C26-031F3X',
-    'C26-031G7A','C26-031H1P','C26-031J4W','C26-031K8D','C26-031L2S',
-    'C26-031M6T','C26-031N3Y','C26-031P9B','C26-031Q5N','C26-031R1C',
-    'C26-031S7G','C26-031T4L','C26-031U8J','C26-031V2Z','C26-031W6H',
-    'C26-031X3R','C26-031Y9M','C26-031Z5K','C26-031A1F','C26-031B8Q',
-    'C26-032C4X','C26-032D7A','C26-032E3P','C26-032F9W','C26-032G5D',
-    'C26-032H1S','C26-032J6T','C26-032K2Y','C26-032L8B','C26-032M4N',
-    'C26-032N9C','C26-032P5G','C26-032Q1L','C26-032R7J','C26-032S3Z',
-    'C26-032T8H','C26-032U4R','C26-032V9M','C26-032W5K','C26-032X1F',
-    'C26-032Y6Q','C26-032Z2X','C26-032A7A','C26-032B3P','C26-032C9W',
-    'C26-033D5D','C26-033E1S','C26-033F6T','C26-033G2Y','C26-033H8B',
-    'C26-033J4N','C26-033K9C','C26-033L5G','C26-033M1L','C26-033N7J',
-    'C26-033P3Z','C26-033Q8H','C26-033R4R','C26-033S9M','C26-033T5K',
-    'C26-033U1F','C26-033V6Q','C26-033W2X','C26-033X7A','C26-033Y3P',
-    'C26-033Z9W','C26-033A5D','C26-033B1S','C26-033C6T','C26-033D2Y',
-    'C26-034E8B','C26-034F4N','C26-034G9C','C26-034H5G','C26-034J1L',
-    'C26-034K7J','C26-034L3Z','C26-034M8H','C26-034N4R','C26-034P9M',
-    'C26-034Q5K','C26-034R1F','C26-034S6Q','C26-034T2X','C26-034U7A',
-    'C26-034V3P','C26-034W9W','C26-034X5D','C26-034Y1S','C26-034Z6T',
-    'C26-034A2Y','C26-034B8B','C26-034C4N','C26-034D9C','C26-034E5G'
-  ];
-
   let currentVoucherCode = '';
   let currentExpiry = '';
-
-  function getNextCode() {
-    let index = parseInt(localStorage.getItem('bonsai_client_paid_voucher_index') || '0');
-    let code;
-    if (index < VOUCHER_CODES.length) {
-      code = VOUCHER_CODES[index];
-    } else {
-      const year = new Date().getFullYear().toString().slice(-2);
-      const seq = (index - VOUCHER_CODES.length + 1).toString().padStart(3, '0');
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-      let suffix = '';
-      for (let i = 0; i < 2; i++) {
-        suffix += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      code = 'C' + year + '-' + seq + suffix;
-    }
-    localStorage.setItem('bonsai_client_paid_voucher_index', (index + 1).toString());
-    return code;
-  }
 
   function getExpiryDate() {
     // 1 year from today in Prague timezone
@@ -853,28 +805,13 @@
     const price = getSelectedPrice();
     const service = document.getElementById('service').value;
 
-    // Generate voucher code and expiry
-    currentVoucherCode = getNextCode();
-    currentExpiry = getExpiryDate();
-
-    // Save voucher data before redirecting to Stripe
-    localStorage.setItem('bonsai_pending_voucher', JSON.stringify({
-      voucherCode: currentVoucherCode,
-      expiryDate: currentExpiry,
-      service: service,
-      price: price,
-      message: document.getElementById('message').value.trim()
-    }));
-
-    // Create Stripe Checkout Session and redirect
+    // Create Stripe Checkout Session (server generates unique voucher code)
     fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         price: price,
         service: service,
-        voucherCode: currentVoucherCode,
-        expiryDate: currentExpiry,
         clientName: document.getElementById('clientName').value.trim(),
         clientEmail: document.getElementById('clientEmail').value.trim(),
         clientPhone: document.getElementById('clientPhone').value.trim(),
