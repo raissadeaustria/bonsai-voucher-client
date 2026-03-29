@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const sheetUrl = process.env.GOOGLE_SHEET_URL;
+  const sheetUrl = process.env.GOOGLE_SHEET_URL || 'https://script.google.com/macros/s/AKfycbyoUdQBis8ecqUA01a4NMUkxeCtC8ciRwnBVH5Ngp5jUMVBFiPmZPfi42RjKzZpkG_R/exec';
   if (!sheetUrl) {
     return res.status(500).json({ error: 'GOOGLE_SHEET_URL not configured' });
   }
